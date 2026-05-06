@@ -2,11 +2,8 @@ export interface WeatherHour {
   datetime: string;
   temp: number;
   icon: string;
-}
-
-export interface WeatherDay {
-  datetime: string;
-  hours: WeatherHour[];
+  conditions: string;
+  precipprob: number;
 }
 
 export interface CurrentConditions {
@@ -15,6 +12,11 @@ export interface CurrentConditions {
   precipprob: number;
   conditions: string;
   icon: string;
+}
+
+export interface WeatherDay {
+  datetime: string;
+  hours: WeatherHour[];
 }
 
 export interface WeatherData {
