@@ -68,6 +68,12 @@ export default function Home() {
     enabled: Boolean(location),
   });
 
+  useEffect(() => {
+    if (data?.resolvedAddress) {
+      setSearchValue(data.resolvedAddress);
+    }
+  }, [data?.resolvedAddress]);
+  
   const next24Hours = useMemo(() => {
     if (!data?.days) return [];
 
