@@ -6,8 +6,6 @@ import { Search, RefreshCw, CloudRain, Wind, Sun, Cloud, CloudSun, CloudLightnin
 import { fetchWeather } from "./services/api";
 import { WeatherHour } from "./types/weather";
 
-
-
 function getWeatherIcon(icon: string) {
   const className = "w-8 h-8";
 
@@ -35,29 +33,44 @@ function formatHour(datetime: string) {
   return datetime.slice(0, 5);
 }
 
-
-
 export default function Home() {
-
   const [location, setLocation] = useState("");
-  const [searchValue, setSearchValue] = useState("");
+  const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setLocation("Medellín");
-      setSearchValue("Medellín");
+      setLocation("Manizales");
+      setInputValue("Manizales");
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const currentLocation = `${coords.latitude},${coords.longitude}`;
-        setLocation(currentLocation);
-        setSearchValue(currentLocation);
+      async ({ coords }) => {
+        const { latitude, longitude } = coords;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { "Accept-Language": "es" } }
+          );
+          const geoData = await response.json();
+
+          const city =
+            geoData.address?.city ||
+            geoData.address?.town ||
+            geoData.address?.municipality ||
+            geoData.address?.village ||
+            "Manizales";
+
+          setLocation(city);
+          setInputValue(city);
+        } catch {
+          setLocation(`${latitude},${longitude}`);
+        }
       },
       () => {
-        setLocation("Medellín");
-        setSearchValue("Medellín");
+        setLocation("Manizales");
+        setInputValue("Manizales");
       }
     );
   }, []);
@@ -68,26 +81,22 @@ export default function Home() {
     enabled: Boolean(location),
   });
 
-  useEffect(() => {
-    if (data?.resolvedAddress) {
-      setSearchValue(data.resolvedAddress);
-    }
-  }, [data?.resolvedAddress]);
-  
+  console.log("resolvedAddress:", data?.resolvedAddress);
+
+  const searchValue = inputValue || data?.resolvedAddress || "";
+
   const next24Hours = useMemo(() => {
     if (!data?.days) return [];
-
     const allHours = data.days.flatMap((day) => day.hours);
     return allHours.slice(0, 24);
   }, [data]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    const trimmedLocation = searchValue.trim();
-    if (!trimmedLocation) return;
-
-    setLocation(trimmedLocation);
+    const trimmed = inputValue.trim() || data?.resolvedAddress || "";
+    if (!trimmed) return;
+    setLocation(trimmed);
+    setInputValue("");
   };
 
   const current = data?.currentConditions;
@@ -107,7 +116,7 @@ export default function Home() {
               <input
                 type="text"
                 value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
+                onChange={(event) => setInputValue(event.target.value)}
                 placeholder="Buscar ubicación..."
                 className="w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
               />
@@ -198,7 +207,7 @@ export default function Home() {
                 {next24Hours.map((hour: WeatherHour, index: number) => (
                   <div
                     key={`${hour.datetime}-${index}`}
-                    className="min-w-27.5 flex flex-col items-center bg-slate-50 p-4 rounded-2xl border border-slate-100"
+                    className="min-w-28 flex flex-col items-center bg-slate-50 p-4 rounded-2xl border border-slate-100"
                   >
                     <span className="text-slate-500 text-sm mb-3 font-medium">
                       {formatHour(hour.datetime)}
