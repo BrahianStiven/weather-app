@@ -1,3 +1,11 @@
+# Weather App
+
+Proyecto realizado como práctica del reto de roadmap.sh.
+
+- Project URL: https://roadmap.sh/projects/weather-app
+- Repository URL: https://github.com/tu-usuario/weather-app
+- Live Demo: pendiente
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

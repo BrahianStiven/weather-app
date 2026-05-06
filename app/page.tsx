@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, RefreshCw, CloudRain, Wind, Sun, Cloud, CloudSun, CloudLightning, LoaderCircle } from "lucide-react";
 import { fetchWeather } from "./services/api";
 import { WeatherHour } from "./types/weather";
+
+
 
 function getWeatherIcon(icon: string) {
   const className = "w-8 h-8";
@@ -33,13 +35,37 @@ function formatHour(datetime: string) {
   return datetime.slice(0, 5);
 }
 
+
+
 export default function Home() {
-  const [location, setLocation] = useState("Medellín");
-  const [searchValue, setSearchValue] = useState("Medellín");
+
+  const [location, setLocation] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocation("Medellín");
+      setSearchValue("Medellín");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const currentLocation = `${coords.latitude},${coords.longitude}`;
+        setLocation(currentLocation);
+        setSearchValue(currentLocation);
+      },
+      () => {
+        setLocation("Medellín");
+        setSearchValue("Medellín");
+      }
+    );
+  }, []);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["weather", location],
     queryFn: () => fetchWeather(location),
+    enabled: Boolean(location),
   });
 
   const next24Hours = useMemo(() => {
@@ -53,7 +79,6 @@ export default function Home() {
     event.preventDefault();
 
     const trimmedLocation = searchValue.trim();
-
     if (!trimmedLocation) return;
 
     setLocation(trimmedLocation);
